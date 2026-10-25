@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, PanInfo, useAnimation } from "framer-motion";
 import { usePhoneStore } from "../../store/usePhoneStore";
+import { LOCK_WALLPAPER_BACKGROUND } from "../../lib/wallpaper";
 
-// Change this to match your story character (4 or 6 digits both work —
-// the dot grid and keypad layout adapt automatically to this length).
 const CORRECT_PASSCODE = "0000";
 
 type LockView = "clock" | "passcode";
@@ -44,14 +43,13 @@ export default function LockScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // --- Swipe up on the clock view transitions into the passcode pad ---
   const handleDragEnd = (
     _: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
     if (info.offset.y < -80 || info.velocity.y < -450) {
       setView("passcode");
-      controls.set({ y: 0 }); // reset drag offset for next time we return here
+      controls.set({ y: 0 });
     } else {
       controls.start({
         y: 0,
@@ -60,7 +58,6 @@ export default function LockScreen() {
     }
   };
 
-  // --- Passcode entry logic ---
   const handleDigit = (digit: string) => {
     if (entered.length >= CORRECT_PASSCODE.length) return;
     const next = [...entered, digit];
@@ -79,14 +76,15 @@ export default function LockScreen() {
     }
   };
 
-  const handleDelete = () => {
-    setEntered((prev) => prev.slice(0, -1));
-  };
+  const handleDelete = () => setEntered((prev) => prev.slice(0, -1));
 
   return (
-    <div className="absolute inset-0 z-40 overflow-hidden">
-      <AnimatePresence initial={false} mode="wait">
-        {view === "clock" ? (
+    <div
+      className="absolute inset-0 z-40 overflow-hidden bg-cover bg-center"
+      style={{ backgroundImage: LOCK_WALLPAPER_BACKGROUND }}
+    >
+      <AnimatePresence>
+        {view === "clock" && (
           <motion.div
             key="clock-view"
             animate={controls}
@@ -94,38 +92,33 @@ export default function LockScreen() {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.15}
             onDragEnd={handleDragEnd}
-            initial={{ y: 0 }}
-            exit={{ y: "-100%", transition: { duration: 0.3, ease: [0.32, 0.72, 0, 1] } }}
-            className="absolute inset-0 flex flex-col items-center bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url(/images/lockscreen.jpeg)",
+            initial={{ y: 0, opacity: 1 }}
+            exit={{
+              y: "-60%",
+              opacity: 0,
+              transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] },
             }}
+            className="absolute inset-0 flex flex-col items-center"
           >
             <div className="h-11" />
 
             <div className="mt-6 flex flex-col items-center text-white select-none">
-              <span className="text-[17px] font-medium opacity-90">{date}</span>
-              <span className="text-[96px] font-semibold leading-none tracking-tight mt-1">
+              <span className="text-[19px] font-semibold tracking-wide opacity-90">
+                {date}
+              </span>
+              <span className="text-[104px] font-bold leading-none tracking-tight mt-1">
                 {time}
               </span>
             </div>
 
-            <div className="mt-8 w-[88%] space-y-2">
-              {/* Example notification card:
-              <div className="bg-white/20 backdrop-blur-xl rounded-2xl px-4 py-3 text-white">
-                <p className="text-sm font-semibold">Messages</p>
-                <p className="text-sm opacity-90">New message from Aiko</p>
-              </div>
-              */}
-            </div>
+            <div className="mt-8 w-[88%] space-y-2" />
 
             <div className="flex-1" />
 
             <div className="w-full flex justify-between px-7 mb-9">
               <button
                 aria-label="Flashlight"
-                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center active:scale-90 transition-transform"
+                className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <path
@@ -139,7 +132,7 @@ export default function LockScreen() {
               </button>
               <button
                 aria-label="Camera"
-                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center active:scale-90 transition-transform"
+                className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="7" width="18" height="13" rx="2.5" stroke="white" strokeWidth="1.6" />
@@ -151,93 +144,101 @@ export default function LockScreen() {
 
             <div className="mb-3 flex flex-col items-center text-white/80 select-none">
               <div className="w-32 h-1.5 rounded-full bg-white/80 mb-2" />
-              <span className="text-[13px]">Swipe up to unlock</span>
+              <span className="text-[13px] font-medium tracking-wide">Swipe up to unlock</span>
             </div>
           </motion.div>
-        ) : (
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {view === "passcode" && (
           <motion.div
             key="passcode-view"
-            initial={{ y: "100%" }}
-            animate={{ y: 0, transition: { type: "spring", stiffness: 380, damping: 36 } }}
-            exit={{ y: "100%", transition: { duration: 0.25 } }}
-            className="absolute inset-0 flex flex-col items-center bg-[#0b0712]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.3 } }}
+            exit={{ opacity: 0, transition: { duration: 0.2 } }}
+            className="absolute inset-0"
           >
-            <div className="h-11" />
+            <div className="absolute inset-0 bg-black/45 backdrop-blur-2xl" />
 
-            <button
-              onClick={() => {
-                setEntered([]);
-                setView("clock");
-              }}
-              className="self-end mr-6 mt-3 text-[15px] text-white/80"
-            >
-              Cancel
-            </button>
+            <div className="relative z-10 flex flex-col items-center h-full">
+              <div className="h-11" />
 
-            <div className="mt-10 flex flex-col items-center text-white select-none">
-              <span className="text-[17px] font-medium mb-7">
-                {error ? "Try again" : "Enter Passcode"}
-              </span>
-
-              <motion.div
-                animate={error ? { x: [0, -10, 10, -10, 10, 0] } : { x: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex gap-5"
+              <button
+                onClick={() => {
+                  setEntered([]);
+                  setView("clock");
+                }}
+                className="self-end mr-6 mt-3 text-[15px] font-medium text-white/80"
               >
-                {Array.from({ length: CORRECT_PASSCODE.length }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-3.5 h-3.5 rounded-full border border-white/70 ${
-                      i < entered.length
-                        ? error
-                          ? "bg-ios-red border-ios-red"
-                          : "bg-white"
-                        : "bg-transparent"
-                    }`}
-                  />
-                ))}
-              </motion.div>
-            </div>
+                Cancel
+              </button>
 
-            <div className="flex-1" />
+              <div className="mt-10 flex flex-col items-center text-white select-none">
+                <span className="text-[17px] font-semibold tracking-tight mb-7">
+                  {error ? "Try again" : "Enter Passcode"}
+                </span>
 
-            <div className="grid grid-cols-3 gap-x-7 gap-y-4 mb-10">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-                <button
-                  key={d}
-                  onClick={() => handleDigit(d)}
-                  className="w-[72px] h-[72px] rounded-full bg-white/15 text-white text-[30px] font-light active:bg-white/30 transition-colors select-none"
+                <motion.div
+                  animate={error ? { x: [0, -10, 10, -10, 10, 0] } : { x: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex gap-5"
                 >
-                  {d}
+                  {Array.from({ length: CORRECT_PASSCODE.length }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-3.5 h-3.5 rounded-full border border-white/70 ${
+                        i < entered.length
+                          ? error
+                            ? "bg-ios-red border-ios-red"
+                            : "bg-white"
+                          : "bg-transparent"
+                      }`}
+                    />
+                  ))}
+                </motion.div>
+              </div>
+
+              <div className="flex-1" />
+
+              <div className="grid grid-cols-3 gap-x-7 gap-y-4 mb-10">
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => handleDigit(d)}
+                    className="w-[72px] h-[72px] rounded-full border border-white/40 text-white text-[30px] font-light tracking-tight active:bg-white/15 transition-colors select-none"
+                  >
+                    {d}
+                  </button>
+                ))}
+                <div />
+                <button
+                  onClick={() => handleDigit("0")}
+                  className="w-[72px] h-[72px] rounded-full border border-white/40 text-white text-[30px] font-light tracking-tight active:bg-white/15 transition-colors select-none"
+                >
+                  0
                 </button>
-              ))}
-              <div />
-              <button
-                onClick={() => handleDigit("0")}
-                className="w-[72px] h-[72px] rounded-full bg-white/15 text-white text-[30px] font-light active:bg-white/30 transition-colors select-none"
-              >
-                0
-              </button>
-              <button
-                onClick={handleDelete}
-                className="w-[72px] h-[72px] flex items-center justify-center text-white/80 active:text-white transition-colors select-none"
-                aria-label="Delete"
-              >
-                <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
-                  <path
-                    d="M9 1h15a1 1 0 011 1v16a1 1 0 01-1 1H9L1 10l8-9z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M13.5 6.5l6 6M19.5 6.5l-6 6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
+                <button
+                  onClick={handleDelete}
+                  className="w-[72px] h-[72px] flex items-center justify-center text-white/80 active:text-white transition-colors select-none"
+                  aria-label="Delete"
+                >
+                  <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
+                    <path
+                      d="M9 1h15a1 1 0 011 1v16a1 1 0 01-1 1H9L1 10l8-9z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M13.5 6.5l6 6M19.5 6.5l-6 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
