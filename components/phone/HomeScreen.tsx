@@ -30,7 +30,7 @@ const PAGES: AppDef[][] = [PAGE_1, PAGE_2];
 
 const DOCK: AppDef[] = [
   { id: "messages", name: "Messages", icon: "/icons/messages.svg" },
-  { id: "firefox", name: "Firefox", icon: "/icons/firefox.svg" },
+  { id: "calendar", name: "Calendar", icon: "/icons/calendar.svg" },
   { id: "music", name: "Music", icon: "/icons/music.svg" },
   { id: "instagram", name: "Instagram", icon: "/icons/instagram.svg" },
 ];
@@ -67,8 +67,8 @@ function PhotoWidget() {
       onDoubleClick={(e) => e.stopPropagation()}
     >
       <img
-        src="/icons/widget-photo-placeholder.jpg"
-        alt="Memory"
+        src="/images/widget-photo-placeholder.jpeg"
+        alt="Loves-images"
         className="w-full h-full object-cover"
       />
     </div>
@@ -100,7 +100,7 @@ export default function HomeScreen() {
         className="flex-1 pt-14 pb-2 bg-cover bg-center"
         style={{
           backgroundImage:
-            "linear-gradient(180deg, #3a2f5c 0%, #1b1430 100%)",
+            "url(/images/homescreen.jpeg)",
         }}
       >
         <motion.div

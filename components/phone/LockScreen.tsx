@@ -99,7 +99,7 @@ export default function LockScreen() {
             className="absolute inset-0 flex flex-col items-center bg-cover bg-center"
             style={{
               backgroundImage:
-                "linear-gradient(180deg, #2b2440 0%, #141022 60%, #05040a 100%)",
+                "url(/images/lockscreen.jpeg)",
             }}
           >
             <div className="h-11" />

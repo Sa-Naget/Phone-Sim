@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="200" height="200" viewBox="0 0 200 200" xml:space="preserve">
+<!-- Created with SVG Stack Editor - https://svgstack.com -->
+<defs>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="transparent"></rect>
+<g transform="matrix(1.65 0 0 1.65 100 100)"  >
+<g style=""   >
+		<g transform="matrix(1 0 0 1 0 0)" id="path_0" clip-path="url(#CLIPPATH_2)"  >
+<linearGradient id="SVGID_paint0_linear_10_5031_1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)"  x1="59.9991" y1="120" x2="59.9991" y2="0.0000572205">
+<stop offset="0%" style="stop-color:rgb(29,111,242);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(26,200,252);stop-opacity: 1"/>
+</linearGradient>
+<clipPath id="CLIPPATH_2" >
+	<rect transform="matrix(1 0 0 1 0 0)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_paint0_linear_10_5031_1); fill-rule: evenodd; opacity: 1;"  transform=" translate(-60, -60)" d="M 120 26.0001 L 120 94.0001 C 120.007 97.4163 119.339 100.8 118.035 103.958 C 116.731 107.115 114.816 109.984 112.4 112.4 C 109.984 114.816 107.115 116.731 103.958 118.035 C 100.8 119.339 97.4163 120.007 94.0001 120 L 26.0001 120 C 22.5838 120.007 19.1998 119.339 16.0422 118.035 C 12.8847 116.731 10.0157 114.816 7.60005 112.4 C 5.18437 109.984 3.26949 107.115 1.96528 103.958 C 0.661078 100.8 -0.0067736 97.4163 0.0000517919 94.0001 L 0.0000517919 26.0001 C -0.0067736 22.5838 0.661078 19.1998 1.96528 16.0422 C 3.26949 12.8847 5.18437 10.0157 7.60005 7.60005 C 10.0157 5.18437 12.8847 3.26949 16.0422 1.96528 C 19.1998 0.661078 22.5838 -0.0067736 26.0001 0.0000517919 L 94.0001 0.0000517919 C 97.4163 -0.0067736 100.8 0.661078 103.958 1.96528 C 107.115 3.26949 109.984 5.18437 112.4 7.60005 C 114.816 10.0157 116.731 12.8847 118.035 16.0422 C 119.339 19.1998 120.007 22.5838 120 26.0001 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 32.8 14.5)" id="path_1" clip-path="url(#CLIPPATH_3)"  >
+<clipPath id="CLIPPATH_3" >
+	<rect transform="matrix(1 0 0 1 -32.8 -14.5)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: evenodd; opacity: 1;"  transform=" translate(-92.8, -74.5)" d="M 82.6 69 L 97.5 69 C 98.9587 69 100.358 69.5795 101.389 70.6109 C 102.421 71.6424 103 73.0413 103 74.5 C 103 75.9587 102.421 77.3576 101.389 78.3891 C 100.358 79.4205 98.9587 80 97.5 80 L 82.6 80 L 82.6 69 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 -3.28 -0.58)" id="path_2" clip-path="url(#CLIPPATH_4)"  >
+<clipPath id="CLIPPATH_4" >
+	<rect transform="matrix(1 0 0 1 3.28 0.58)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: evenodd; opacity: 1;"  transform=" translate(-56.72, -59.42)" d="M 64.3 68.9999 C 65.3392 68.9937 66.3693 69.1938 67.3305 69.5886 C 68.2918 69.9834 69.1652 70.5651 69.9 71.2999 C 70.6348 72.0347 71.2165 72.9081 71.6113 73.8694 C 72.0061 74.8306 72.2062 75.8607 72.2 76.8999 C 72.204 77.9625 72.0002 79.0156 71.6 79.9999 L 22.5 79.9999 C 21.0413 79.9999 19.6424 79.4204 18.6109 78.389 C 17.5795 77.3575 17 75.9586 17 74.4999 C 17 73.0412 17.5795 71.6423 18.6109 70.6108 C 19.6424 69.5794 21.0413 68.9999 22.5 68.9999 L 64.3 68.9999 Z M 62.9 32.7999 L 62.9 42.3999 L 56.5 42.3999 L 48.7 28.9999 C 48.3574 28.4089 48.1347 27.7562 48.0445 27.079 C 47.9544 26.4018 47.9987 25.7136 48.1748 25.0535 C 48.3509 24.3935 48.6554 23.7747 49.0709 23.2324 C 49.4864 22.6902 50.0047 22.2352 50.5962 21.8934 C 51.1877 21.5517 51.8408 21.3299 52.5181 21.2407 C 53.1954 21.1516 53.8836 21.1968 54.5434 21.3739 C 55.2032 21.551 55.8215 21.8564 56.3632 22.2727 C 56.9048 22.6889 57.3591 23.2079 57.7 23.7999 L 62.9 32.7999 Z M 68.4 42.0999 L 95.7 89.3999 C 96.4293 90.6597 96.6284 92.1576 96.2533 93.5641 C 95.8782 94.9706 94.9598 96.1706 93.7 96.8999 C 92.4402 97.6293 90.9423 97.8283 89.5358 97.4532 C 88.1293 97.0781 86.9293 96.1597 86.2 94.8999 L 69.7 66.1999 C 68.2 63.3999 67.1 61.1999 66.4 59.9999 C 64.7566 57.2001 64.0634 53.9437 64.4239 50.7174 C 64.7844 47.491 66.1792 44.4679 68.4 42.0999 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 -12 -0.45)" id="path_3" clip-path="url(#CLIPPATH_5)"  >
+<clipPath id="CLIPPATH_5" >
+	<rect transform="matrix(1 0 0 1 12 0.45)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: evenodd; opacity: 1;"  transform=" translate(-48, -59.55)" d="M 46 73.9999 L 33.3 73.9999 L 62 24.2999 C 62.7294 23.0401 63.9293 22.1217 65.3358 21.7466 C 66.7423 21.3715 68.2402 21.5706 69.5 22.2999 C 70.7598 23.0293 71.6782 24.2292 72.0533 25.6357 C 72.4284 27.0422 72.2294 28.5401 71.5 29.7999 L 46 73.9999 Z M 39.3 85.4999 L 34 94.7999 C 33.6389 95.4237 33.1584 95.9702 32.5861 96.4083 C 32.0137 96.8464 31.3607 97.1675 30.6642 97.3532 C 29.9678 97.5389 29.2416 97.5857 28.5271 97.4907 C 27.8126 97.3958 27.1238 97.1611 26.5 96.7999 C 25.8762 96.4388 25.3297 95.9583 24.8916 95.386 C 24.4535 94.8136 24.1324 94.1606 23.9467 93.4641 C 23.761 92.7677 23.7143 92.0415 23.8092 91.327 C 23.9041 90.6125 24.1389 89.9237 24.5 89.2999 L 28.4 82.4999 C 29.6111 81.8973 30.9473 81.589 32.3 81.5999 C 33.7109 81.5536 35.1077 81.8921 36.3409 82.5791 C 37.574 83.2662 38.5969 84.2758 39.3 85.4999 Z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+<g transform="matrix(1.65 0 0 1.65 100 100)"  >
+<g style=""   >
+		<g transform="matrix(1 0 0 1 0 0)" id="path_0" clip-path="url(#CLIPPATH_6)"  >
+<linearGradient id="SVGID_paint0_linear_10_5031_1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(1 0 0 1 0 0)"  x1="59.9991" y1="120" x2="59.9991" y2="0.0000572205">
+<stop offset="0%" style="stop-color:rgb(29,111,242);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(26,200,252);stop-opacity: 1"/>
+</linearGradient>
+<clipPath id="CLIPPATH_6" >
+	<rect transform="matrix(1 0 0 1 0 0)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_paint0_linear_10_5031_1); fill-rule: evenodd; opacity: 1;"  transform=" translate(-60, -60)" d="M 120 26.0001 L 120 94.0001 C 120.007 97.4163 119.339 100.8 118.035 103.958 C 116.731 107.115 114.816 109.984 112.4 112.4 C 109.984 114.816 107.115 116.731 103.958 118.035 C 100.8 119.339 97.4163 120.007 94.0001 120 L 26.0001 120 C 22.5838 120.007 19.1998 119.339 16.0422 118.035 C 12.8847 116.731 10.0157 114.816 7.60005 112.4 C 5.18437 109.984 3.26949 107.115 1.96528 103.958 C 0.661078 100.8 -0.0067736 97.4163 0.0000517919 94.0001 L 0.0000517919 26.0001 C -0.0067736 22.5838 0.661078 19.1998 1.96528 16.0422 C 3.26949 12.8847 5.18437 10.0157 7.60005 7.60005 C 10.0157 5.18437 12.8847 3.26949 16.0422 1.96528 C 19.1998 0.661078 22.5838 -0.0067736 26.0001 0.0000517919 L 94.0001 0.0000517919 C 97.4163 -0.0067736 100.8 0.661078 103.958 1.96528 C 107.115 3.26949 109.984 5.18437 112.4 7.60005 C 114.816 10.0157 116.731 12.8847 118.035 16.0422 C 119.339 19.1998 120.007 22.5838 120 26.0001 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 32.8 14.5)" id="path_1" clip-path="url(#CLIPPATH_7)"  >
+<clipPath id="CLIPPATH_7" >
+	<rect transform="matrix(1 0 0 1 -32.8 -14.5)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: evenodd; opacity: 1;"  transform=" translate(-92.8, -74.5)" d="M 82.6 69 L 97.5 69 C 98.9587 69 100.358 69.5795 101.389 70.6109 C 102.421 71.6424 103 73.0413 103 74.5 C 103 75.9587 102.421 77.3576 101.389 78.3891 C 100.358 79.4205 98.9587 80 97.5 80 L 82.6 80 L 82.6 69 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 -3.28 -0.58)" id="path_2" clip-path="url(#CLIPPATH_8)"  >
+<clipPath id="CLIPPATH_8" >
+	<rect transform="matrix(1 0 0 1 3.28 0.58)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: evenodd; opacity: 1;"  transform=" translate(-56.72, -59.42)" d="M 64.3 68.9999 C 65.3392 68.9937 66.3693 69.1938 67.3305 69.5886 C 68.2918 69.9834 69.1652 70.5651 69.9 71.2999 C 70.6348 72.0347 71.2165 72.9081 71.6113 73.8694 C 72.0061 74.8306 72.2062 75.8607 72.2 76.8999 C 72.204 77.9625 72.0002 79.0156 71.6 79.9999 L 22.5 79.9999 C 21.0413 79.9999 19.6424 79.4204 18.6109 78.389 C 17.5795 77.3575 17 75.9586 17 74.4999 C 17 73.0412 17.5795 71.6423 18.6109 70.6108 C 19.6424 69.5794 21.0413 68.9999 22.5 68.9999 L 64.3 68.9999 Z M 62.9 32.7999 L 62.9 42.3999 L 56.5 42.3999 L 48.7 28.9999 C 48.3574 28.4089 48.1347 27.7562 48.0445 27.079 C 47.9544 26.4018 47.9987 25.7136 48.1748 25.0535 C 48.3509 24.3935 48.6554 23.7747 49.0709 23.2324 C 49.4864 22.6902 50.0047 22.2352 50.5962 21.8934 C 51.1877 21.5517 51.8408 21.3299 52.5181 21.2407 C 53.1954 21.1516 53.8836 21.1968 54.5434 21.3739 C 55.2032 21.551 55.8215 21.8564 56.3632 22.2727 C 56.9048 22.6889 57.3591 23.2079 57.7 23.7999 L 62.9 32.7999 Z M 68.4 42.0999 L 95.7 89.3999 C 96.4293 90.6597 96.6284 92.1576 96.2533 93.5641 C 95.8782 94.9706 94.9598 96.1706 93.7 96.8999 C 92.4402 97.6293 90.9423 97.8283 89.5358 97.4532 C 88.1293 97.0781 86.9293 96.1597 86.2 94.8999 L 69.7 66.1999 C 68.2 63.3999 67.1 61.1999 66.4 59.9999 C 64.7566 57.2001 64.0634 53.9437 64.4239 50.7174 C 64.7844 47.491 66.1792 44.4679 68.4 42.0999 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 -12 -0.45)" id="path_3" clip-path="url(#CLIPPATH_9)"  >
+<clipPath id="CLIPPATH_9" >
+	<rect transform="matrix(1 0 0 1 12 0.45)" id="clip0_10_5031" x="-60" y="-60" rx="0" ry="0" width="120" height="120" />
+</clipPath>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: evenodd; opacity: 1;"  transform=" translate(-48, -59.55)" d="M 46 73.9999 L 33.3 73.9999 L 62 24.2999 C 62.7294 23.0401 63.9293 22.1217 65.3358 21.7466 C 66.7423 21.3715 68.2402 21.5706 69.5 22.2999 C 70.7598 23.0293 71.6782 24.2292 72.0533 25.6357 C 72.4284 27.0422 72.2294 28.5401 71.5 29.7999 L 46 73.9999 Z M 39.3 85.4999 L 34 94.7999 C 33.6389 95.4237 33.1584 95.9702 32.5861 96.4083 C 32.0137 96.8464 31.3607 97.1675 30.6642 97.3532 C 29.9678 97.5389 29.2416 97.5857 28.5271 97.4907 C 27.8126 97.3958 27.1238 97.1611 26.5 96.7999 C 25.8762 96.4388 25.3297 95.9583 24.8916 95.386 C 24.4535 94.8136 24.1324 94.1606 23.9467 93.4641 C 23.761 92.7677 23.7143 92.0415 23.8092 91.327 C 23.9041 90.6125 24.1389 89.9237 24.5 89.2999 L 28.4 82.4999 C 29.6111 81.8973 30.9473 81.589 32.3 81.5999 C 33.7109 81.5536 35.1077 81.8921 36.3409 82.5791 C 37.574 83.2662 38.5969 84.2758 39.3 85.4999 Z" stroke-linecap="round" />
+</g>
+</g>
+</g>
+</svg>
