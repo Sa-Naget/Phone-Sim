@@ -7,25 +7,23 @@ import { persist } from "zustand/middleware";
 
 export type ScreenState = "lock" | "home" | "app";
 
-export interface AppWindowState {
-  appId: string | null; // which app is currently open (null = none)
-}
-
 interface PhoneState {
-  // Core navigation
+  // Core navigation — NOT persisted, always starts fresh on page load
   screen: ScreenState;
   openAppId: string | null;
   homePage: number; // which homescreen page is active (0-indexed)
 
-  // "Is this the reader's first visit" — drives story start timestamp
+  // "Is this the reader's first visit" — drives story start timestamp.
+  // This IS persisted so refreshing mid-story doesn't reset scheduled
+  // message reveal timing.
   storyStartedAt: number | null;
 
-  // Notification badges, keyed by app id
+  // Notification badges, keyed by app id — persisted so unread state survives a refresh.
   unreadCounts: Record<string, number>;
 
   // Actions
   unlock: () => void;
-  lock: () => void;
+  lockPhone: () => void;
   openApp: (appId: string) => void;
   closeApp: () => void;
   setHomePage: (page: number) => void;
@@ -48,7 +46,12 @@ export const usePhoneStore = create<PhoneState>()(
         set({ screen: "home" });
       },
 
-      lock: () => set({ screen: "lock", openAppId: null }),
+      // Locks the phone: sends the UI back to the lockscreen and closes
+      // whatever app was open. Because LockScreen's passcode-entry state
+      // lives locally in that component (not here), it unmounts/remounts
+      // fresh every time we come back to "lock" — so passcode progress
+      // is automatically cleared with no extra state to manage.
+      lockPhone: () => set({ screen: "lock", openAppId: null }),
 
       openApp: (appId: string) => {
         get().clearUnread(appId);
@@ -80,6 +83,15 @@ export const usePhoneStore = create<PhoneState>()(
     }),
     {
       name: "au-phone-sim-state", // localStorage key
+      // Only persist narrative/story state. screen, openAppId and homePage
+      // are deliberately excluded so every fresh page load (refresh, new
+      // tab, etc.) lands back on the lockscreen instead of resuming on
+      // the homescreen — matching how a real phone behaves when its
+      // screen times out.
+      partialize: (state) => ({
+        storyStartedAt: state.storyStartedAt,
+        unreadCounts: state.unreadCounts,
+      }),
     }
   )
 );

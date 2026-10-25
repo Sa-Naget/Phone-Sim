@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, PanInfo, useAnimation } from "framer-motion";
-import { usePhoneStore } from "@/store/usePhoneStore";
+import { usePhoneStore } from "../../store/usePhoneStore";
 import StatusBar from "./StatusBar";
 
 export interface AppDef {
@@ -11,7 +11,6 @@ export interface AppDef {
   badge?: number;
 }
 
-// --- Data: swap/extend freely, each inner array = one homescreen page ---
 const PAGE_1: AppDef[] = [
   { id: "messages", name: "Messages", icon: "/icons/messages.svg" },
   { id: "whatsapp", name: "WhatsApp", icon: "/icons/whatsapp.svg" },
@@ -43,10 +42,10 @@ function AppIcon({ app }: { app: AppDef }) {
   return (
     <button
       onClick={() => openApp(app.id)}
+      onDoubleClick={(e) => e.stopPropagation()}
       className="flex flex-col items-center gap-1.5 select-none active:scale-90 transition-transform"
     >
       <div className="relative w-[58px] h-[58px] rounded-appicon overflow-hidden bg-ios-card2 shadow-lg">
-        {/* Swap for real <Image> once assets exist under /public/icons/ */}
         <img src={app.icon} alt={app.name} className="w-full h-full object-cover" />
         {unread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-ios-red text-white text-[11px] font-semibold flex items-center justify-center">
@@ -63,8 +62,10 @@ function AppIcon({ app }: { app: AppDef }) {
 
 function PhotoWidget() {
   return (
-    <div className="col-span-2 row-span-2 rounded-[24px] overflow-hidden shadow-lg bg-ios-card2">
-      {/* Replace src with a character photo asset */}
+    <div
+      className="col-span-2 row-span-2 rounded-[24px] overflow-hidden shadow-lg bg-ios-card2"
+      onDoubleClick={(e) => e.stopPropagation()}
+    >
       <img
         src="/icons/widget-photo-placeholder.jpg"
         alt="Memory"
@@ -77,6 +78,7 @@ function PhotoWidget() {
 export default function HomeScreen() {
   const homePage = usePhoneStore((s) => s.homePage);
   const setHomePage = usePhoneStore((s) => s.setHomePage);
+  const lockPhone = usePhoneStore((s) => s.lockPhone);
   const controls = useAnimation();
 
   const handleDragEnd = (
@@ -94,6 +96,7 @@ export default function HomeScreen() {
     <div className="absolute inset-0 z-30 flex flex-col">
       <StatusBar />
       <div
+        onDoubleClick={() => lockPhone()}
         className="flex-1 pt-14 pb-2 bg-cover bg-center"
         style={{
           backgroundImage:
@@ -122,7 +125,6 @@ export default function HomeScreen() {
           ))}
         </motion.div>
 
-        {/* Page dots */}
         <div className="flex justify-center gap-1.5 mt-2">
           {PAGES.map((_, i) => (
             <div
@@ -135,13 +137,14 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* Dock */}
-      <div className="mx-3 mb-2 rounded-[32px] bg-white/15 backdrop-blur-2xl px-5 py-3 flex justify-between">
+      <div
+        onDoubleClick={(e) => e.stopPropagation()}
+        className="mx-3 mb-2 rounded-[32px] bg-white/15 backdrop-blur-2xl px-5 py-3 flex justify-between"
+      >
         {DOCK.map((app) => (
           <AppIcon key={app.id} app={app} />
         ))}
       </div>
-      {/* Home indicator */}
       <div className="mb-2 flex justify-center">
         <div className="w-32 h-1.5 rounded-full bg-white/80" />
       </div>
