@@ -27,53 +27,54 @@ interface ChatMessage {
 // --- Seed data: swap freely, or wire to your real narrative content ---
 const INITIAL_THREADS: Thread[] = [
   {
-    id: "aiko",
-    name: "Aiko",
-    avatar: "/avatars/aiko.jpg",
+    id: "agetta",
+    name: "Mas Agettaaaaaa",
+    avatar: "/avatars/agetta.jpeg",
     online: true,
     unread: 2,
   },
   {
-    id: "noah",
-    name: "Noah",
-    avatar: "/avatars/noah.jpg",
+    id: "utami",
+    name: "Bukan Utama",
+    avatar: "/avatars/utami.jpeg",
     online: false,
-    unread: 0,
+    unread: 2,
   },
   {
-    id: "group-skaduta",
-    name: "SKADUTA Crew",
-    avatar: "/avatars/group.jpg",
+    id: "group-ruhesa",
+    name: "Bagi Bagi Dageng😹✌🏻",
+    avatar: "/avatars/group.jpeg",
     online: false,
     unread: 5,
   },
 ];
 
 const INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
-  aiko: [
+  agetta: [
     { id: "a1", from: "them", text: "did you get home okay?", time: "9:38 AM" },
-    { id: "a2", from: "me", text: "yeah just walked in", time: "9:40 AM", read: true },
+    { id: "a2", from: "me", text: "yap yap, just got hereee", time: "9:40 AM", read: true },
     { id: "a3", from: "them", text: "good. text me tomorrow", time: "9:41 AM" },
   ],
-  noah: [
-    { id: "n1", from: "them", text: "deadline moved to friday", time: "Yesterday" },
+  utami: [
+    { id: "n1", from: "them", text: "yo we're meeting up at 9 tmrw", time: "Yesterday" },
+    { id: "n2", from: "them", text: "also don't forget to turn in your homework", time: "Yesterday" },
   ],
-  "group-skaduta": [
-    { id: "g1", from: "them", text: "meeting notes are up", time: "2:14 PM" },
-    { id: "g2", from: "them", text: "check the drive folder", time: "2:15 PM" },
+  "group-ruhesa": [
+    { id: "g1", from: "them", text: "where are you guys??", time: "2:14 PM" },
+    { id: "g2", from: "them", text: "hellooo??", time: "2:15 PM" },
   ],
 };
 
 const LAST_MESSAGE_PREVIEW: Record<string, string> = {
-  aiko: "good. text me tomorrow",
-  noah: "deadline moved to friday",
-  "group-skaduta": "check the drive folder",
+  agetta: "good. text me tomorrow",
+  utami: "deadline moved to friday",
+  "group-ruhesa": "check the drive folder",
 };
 
 const LAST_MESSAGE_TIME: Record<string, string> = {
-  aiko: "9:41 AM",
-  noah: "Yesterday",
-  "group-skaduta": "2:15 PM",
+  agetta: "9:41 AM",
+  utami: "Yesterday",
+  "group-ruhesa": "2:15 PM",
 };
 
 // ---- Virtual keyboard ---------------------------------------------------
