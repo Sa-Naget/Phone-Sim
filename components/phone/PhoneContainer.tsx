@@ -7,13 +7,14 @@ import HomeScreen from "./HomeScreen";
 import StatusBar from "./StatusBar";
 import IMessageApp from "../apps/IMessage";
 import InstagramApp from "../apps/Instagram";
+import WhatsAppApp from "../apps/Whatsapp";
 
 // Placeholder registry — each real app component gets wired in here later.
 // Keeping it data-driven means adding "Instagram.tsx" later is a 2-line change.
 const APP_REGISTRY: Record<string, () => JSX.Element> = {
   messages: () => <IMessageApp />,
   instagram: () => <InstagramApp />,
-  // whatsapp: () => <WhatsAppApp />,
+  whatsapp: () => <WhatsAppApp />,
   // ...
 };
 
