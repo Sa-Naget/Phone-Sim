@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion, PanInfo } from "framer-motion";
 import { usePhoneStore } from "../../store/usePhoneStore";
 import { cn } from "@/lib/utils";
@@ -8,253 +8,419 @@ import StatusBar from "../phone/StatusBar";
 
 // ---- Data model --------------------------------------------------------
 
-interface Thread {
+interface StoryUser {
   id: string;
-  name: string;
+  username: string;
   avatar: string;
-  online: boolean;
-  unread: number;
+  storyImage: string;
+  viewed?: boolean;
 }
 
-interface ChatMessage {
+interface Comment {
+  username: string;
+  text: string;
+}
+
+interface Post {
   id: string;
-  from: "me" | "them";
-  time: string; // display clock time, e.g. "9:41 AM"
-  day: string; // display day label, e.g. "Today" / "Yesterday" — drives the
-  // date divider: a divider renders whenever this changes between
-  // consecutive messages, independent of the time string above
-  type?: "text" | "sticker"; // defaults to "text"
-  text?: string; // required for text messages, ignored for stickers
-  stickerSrc?: string; // required for sticker messages
-  read?: boolean;
+  username: string;
+  avatar: string;
+  location?: string;
+  image: string;
+  liked: boolean;
+  likeCount: number;
+  likedByUsername: string;
+  caption: string;
+  comments: Comment[];
+  timeAgo: string;
 }
 
-const INITIAL_THREADS: Thread[] = [
+const STORIES: StoryUser[] = [
+  { id: "agetta", username: "agetta", avatar: "/avatars/agetta.jpeg", storyImage: "/stories/agetta-1.jpg" },
+  { id: "utami", username: "utami", avatar: "/avatars/utami.jpeg", storyImage: "/stories/utami-1.jpg" },
+  { id: "nora", username: "nora.exe", avatar: "/avatars/nora.jpeg", storyImage: "/stories/nora-1.jpg" },
+  { id: "group", username: "the.crew", avatar: "/avatars/group.jpeg", storyImage: "/stories/group-1.jpg" },
+];
+
+const INITIAL_POSTS: Post[] = [
   {
-    id: "agetta",
-    name: "Mas Agettaaaaaa",
+    id: "p1",
+    username: "agetta",
     avatar: "/avatars/agetta.jpeg",
-    online: true,
-    unread: 2,
+    location: "late night thoughts",
+    image: "/posts/p1.jpg",
+    liked: false,
+    likeCount: 1242,
+    likedByUsername: "utami",
+    caption: "some things are better left unsent",
+    comments: [
+      { username: "utami", text: "ok what does this mean" },
+      { username: "nora.exe", text: "@agetta you good??" },
+      { username: "the.crew", text: "someone check on him" },
+    ],
+    timeAgo: "2h",
   },
   {
-    id: "utami",
-    name: "Bukan Utama",
-    avatar: "/avatars/utami.jpeg",
-    online: false,
-    unread: 2,
-  },
-  {
-    id: "group-ruhesa",
-    name: "Bagi Bagi Dageng😹✌🏻",
-    avatar: "/avatars/group.jpeg",
-    online: false,
-    unread: 5,
+    id: "p2",
+    username: "nora.exe",
+    avatar: "/avatars/nora.jpeg",
+    location: "home",
+    image: "/posts/p2.jpg",
+    liked: true,
+    likeCount: 318,
+    likedByUsername: "agetta",
+    caption: "285 days left and counting 🩷",
+    comments: [{ username: "utami", text: "the countdown widget reference I'M SOBBING" }],
+    timeAgo: "6h",
   },
 ];
 
-const INITIAL_MESSAGES: Record<string, ChatMessage[]> = {
-  agetta: [
-    { id: "a1", from: "them", text: "did you get home okay?", time: "9:38 AM", day: "Today" },
-    { id: "a2", from: "me", text: "yap yap, just got hereee", time: "9:40 AM", day: "Today", read: true },
-    { id: "a3", from: "them", text: "good. text me tomorrow", time: "9:41 AM", day: "Today" },
-  ],
-  utami: [
-    { id: "n1", from: "them", text: "yo we're meeting up at 9 tmrw", time: "6:02 PM", day: "Yesterday" },
-    { id: "n2", from: "them", text: "also don't forget to turn in your homework", time: "6:03 PM", day: "Yesterday" },
-  ],
-  "group-ruhesa": [
-    { id: "g1", from: "them", text: "where are you guys??", time: "2:14 PM", day: "Yesterday" },
-    { id: "g2", from: "them", text: "hellooo??", time: "2:15 PM", day: "Yesterday" },
-    {
-      id: "g3",
-      from: "them",
-      type: "sticker",
-      stickerSrc: "/stickers/panic.png",
-      time: "2:16 PM",
-      day: "Yesterday",
-    },
-    { id: "g4", from: "them", text: "ok fine we'll wait", time: "9:02 AM", day: "Today" },
-  ],
-};
+// ---- Story viewer ---------------------------------------------------
 
-const AUTO_REPLY: Record<string, string> = {
-  agetta: "haha stop texting me so late",
-  utami: "ok noted, don't be late!",
-  "group-ruhesa": "FINALLY 😭 where were you",
-};
-
-// ---- Virtual keyboard ---------------------------------------------------
-
-const ROW_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"];
-const ROW_2 = ["a", "s", "d", "f", "g", "h", "j", "k", "l"];
-const ROW_3 = ["z", "x", "c", "v", "b", "n", "m"];
-
-const NUM_ROW_1 = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
-const NUM_ROW_2 = ["-", "/", ":", ";", "(", ")", "$", "&", "@", '"'];
-const NUM_ROW_3 = [".", ",", "?", "!", "'"];
-
-function VirtualKeyboard({
-  onKey,
-  onBackspace,
-  onSend,
+function StoryViewer({
+  stories,
+  index,
+  onClose,
+  onChangeIndex,
 }: {
-  onKey: (char: string) => void;
-  onBackspace: () => void;
-  onSend: () => void;
+  stories: StoryUser[];
+  index: number;
+  onClose: () => void;
+  onChangeIndex: (i: number) => void;
 }) {
-  const [layer, setLayer] = useState<"letters" | "numbers">("letters");
-  const [shiftOn, setShiftOn] = useState(false);
+  const story = stories[index];
+  if (!story) return null;
 
-  const typeLetter = (letter: string) => {
-    onKey(shiftOn ? letter.toUpperCase() : letter);
-    if (shiftOn) setShiftOn(false);
+  const goNext = () => {
+    if (index < stories.length - 1) onChangeIndex(index + 1);
+    else onClose();
+  };
+  const goPrev = () => {
+    if (index > 0) onChangeIndex(index - 1);
+  };
+
+  const handleDragEnd = (
+    _: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    if (info.offset.y > 100 || info.velocity.y > 600) onClose();
   };
 
   return (
     <motion.div
-      key="keyboard"
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: 252, opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 420, damping: 38 }}
-      className="overflow-hidden bg-[#d1d4da] border-t border-black/10"
+      key="story-viewer"
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      drag="y"
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={0.15}
+      onDragEnd={handleDragEnd}
+      className="absolute inset-0 z-40 bg-black flex flex-col"
     >
-      <div className="h-[252px] px-1.5 pt-2 pb-6 flex flex-col gap-[6px]">
-        {layer === "letters" ? (
-          <>
-            <div className="flex justify-center gap-[6px]">
-              {ROW_1.map((k) => (
-                <KeyButton
-                  key={k}
-                  label={shiftOn ? k.toUpperCase() : k}
-                  onClick={() => typeLetter(k)}
-                />
-              ))}
-            </div>
-            <div className="flex justify-center gap-[6px] px-4">
-              {ROW_2.map((k) => (
-                <KeyButton
-                  key={k}
-                  label={shiftOn ? k.toUpperCase() : k}
-                  onClick={() => typeLetter(k)}
-                />
-              ))}
-            </div>
-            <div className="flex justify-center gap-[6px]">
-              <KeyButton
-                label="⇧"
-                wide
-                active={shiftOn}
-                onClick={() => setShiftOn((v) => !v)}
-              />
-              {ROW_3.map((k) => (
-                <KeyButton
-                  key={k}
-                  label={shiftOn ? k.toUpperCase() : k}
-                  onClick={() => typeLetter(k)}
-                />
-              ))}
-              <KeyButton label="⌫" wide onClick={onBackspace} />
-            </div>
-            <div className="flex gap-[6px] px-1">
-              <KeyButton label="123" wide onClick={() => setLayer("numbers")} />
-              <button
-                onClick={() => onKey(" ")}
-                className="flex-1 h-[42px] rounded-[6px] bg-white shadow select-none active:bg-gray-200"
-              />
-              <button
-                onClick={onSend}
-                className="w-[76px] h-[42px] rounded-[6px] bg-white shadow text-[15px] font-medium select-none active:bg-gray-200"
-              >
-                return
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex justify-center gap-[6px]">
-              {NUM_ROW_1.map((k) => (
-                <KeyButton key={k} label={k} onClick={() => onKey(k)} />
-              ))}
-            </div>
-            <div className="flex justify-center gap-[6px]">
-              {NUM_ROW_2.map((k) => (
-                <KeyButton key={k} label={k} onClick={() => onKey(k)} />
-              ))}
-            </div>
-            <div className="flex justify-center gap-[6px] px-6">
-              {NUM_ROW_3.map((k) => (
-                <KeyButton key={k} label={k} onClick={() => onKey(k)} />
-              ))}
-              <KeyButton label="⌫" wide onClick={onBackspace} />
-            </div>
-            <div className="flex gap-[6px] px-1">
-              <KeyButton label="ABC" wide onClick={() => setLayer("letters")} />
-              <button
-                onClick={() => onKey(" ")}
-                className="flex-1 h-[42px] rounded-[6px] bg-white shadow select-none active:bg-gray-200"
-              />
-              <button
-                onClick={onSend}
-                className="w-[76px] h-[42px] rounded-[6px] bg-white shadow text-[15px] font-medium select-none active:bg-gray-200"
-              >
-                return
-              </button>
-            </div>
-          </>
-        )}
+      <div className="pt-14 px-2 flex gap-1">
+        {stories.map((_, i) => (
+          <div key={i} className="flex-1 h-[2.5px] rounded-full bg-white/30 overflow-hidden">
+            <div
+              className={cn(
+                "h-full bg-white",
+                i < index ? "w-full" : i === index ? "w-full" : "w-0"
+              )}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2.5 px-3 pt-3 pb-2">
+        <img src={story.avatar} alt={story.username} className="w-8 h-8 rounded-full object-cover bg-ios-card2" />
+        <span className="text-white text-[14px] font-semibold">{story.username}</span>
+        <span className="text-white/60 text-[13px]">2h</span>
+        <div className="flex-1" />
+        <button onClick={onClose} className="text-white p-1">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M3 3l14 14M17 3L3 17" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="relative flex-1">
+        <img src={story.storyImage} alt="" className="w-full h-full object-cover" />
+        <button onClick={goPrev} className="absolute inset-y-0 left-0 w-1/3" aria-label="Previous story" />
+        <button onClick={goNext} className="absolute inset-y-0 right-0 w-2/3" aria-label="Next story" />
       </div>
     </motion.div>
   );
 }
 
-function KeyButton({
-  label,
-  onClick,
-  wide = false,
-  active = false,
+// ---- Story tray ---------------------------------------------------
+
+function StoryTray({
+  stories,
+  onOpenStory,
 }: {
-  label: string;
-  onClick: () => void;
-  wide?: boolean;
-  active?: boolean;
+  stories: StoryUser[];
+  onOpenStory: (index: number) => void;
 }) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "h-[42px] rounded-[6px] shadow text-[18px] font-normal select-none active:bg-gray-200 flex items-center justify-center",
-        active ? "bg-white/70 text-ios-blue" : "bg-white text-black",
-        wide ? "w-[42px] text-[14px]" : "flex-1"
-      )}
-    >
-      {label}
-    </button>
+    <div className="flex gap-4 px-4 py-3 overflow-x-auto border-b border-black/5">
+      {stories.map((s, i) => (
+        <button
+          key={s.id}
+          onClick={() => onOpenStory(i)}
+          className="flex flex-col items-center gap-1 shrink-0 active:opacity-70"
+        >
+          <div
+            className={cn(
+              "w-[62px] h-[62px] rounded-full p-[2.5px]",
+              s.viewed
+                ? "bg-gray-300"
+                : "bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5]"
+            )}
+          >
+            <div className="w-full h-full rounded-full bg-white p-[2.5px]">
+              <img
+                src={s.avatar}
+                alt={s.username}
+                className="w-full h-full rounded-full object-cover bg-ios-card2"
+              />
+            </div>
+          </div>
+          <span className="text-[11px] text-black/80 truncate w-[64px] text-center">
+            {s.username}
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
 
-// ---- Conversations list screen -----------------------------------------
+// ---- Post card ---------------------------------------------------
 
-function getLastMessagePreview(messages: ChatMessage[]): { text: string; time: string } {
-  const last = messages[messages.length - 1];
-  if (!last) return { text: "", time: "" };
-  return {
-    text: last.type === "sticker" ? "Sticker" : last.text ?? "",
-    time: last.time,
-  };
+function PostCard({
+  post,
+  expanded,
+  onToggleComments,
+  onToggleLike,
+  onDoubleTapImage,
+  showHeartPulse,
+}: {
+  post: Post;
+  expanded: boolean;
+  onToggleComments: () => void;
+  onToggleLike: () => void;
+  onDoubleTapImage: () => void;
+  showHeartPulse: boolean;
+}) {
+  return (
+    <div className="pb-1">
+      <div className="flex items-center gap-2.5 px-3 py-2.5">
+        <img
+          src={post.avatar}
+          alt={post.username}
+          className="w-8 h-8 rounded-full object-cover bg-ios-card2"
+        />
+        <div className="flex flex-col leading-tight">
+          <span className="text-[13px] font-semibold text-black">{post.username}</span>
+          {post.location && (
+            <span className="text-[11px] text-ios-gray">{post.location}</span>
+          )}
+        </div>
+        <div className="flex-1" />
+        <button>
+          <svg width="18" height="4" viewBox="0 0 18 4" fill="none">
+            <circle cx="2" cy="2" r="1.6" fill="#262626" />
+            <circle cx="9" cy="2" r="1.6" fill="#262626" />
+            <circle cx="16" cy="2" r="1.6" fill="#262626" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="relative w-full aspect-[4/5] bg-ios-card2" onDoubleClick={onDoubleTapImage}>
+        <img src={post.image} alt="" className="w-full h-full object-cover" />
+        <AnimatePresence>
+          {showHeartPulse && (
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1.1, opacity: 1 }}
+              exit={{ scale: 1.3, opacity: 0 }}
+              transition={{ duration: 0.45 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <svg width="90" height="90" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="0.5">
+                <path d="M12 21s-7.5-4.6-10-9.3C.4 8.4 2 5 5.4 5c2 0 3.4 1.1 4.1 2.2.3.4.9.4 1.1 0C11.2 6.1 12.6 5 14.6 5 18 5 19.6 8.4 18 11.7 15.5 16.4 12 21 12 21z" />
+              </svg>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="flex items-center gap-4 px-3 pt-2.5">
+        <button onClick={onToggleLike} className="active:scale-90 transition-transform">
+          {post.liked ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ff3040">
+              <path d="M12 21s-7.5-4.6-10-9.3C.4 8.4 2 5 5.4 5c2 0 3.4 1.1 4.1 2.2.3.4.9.4 1.1 0C11.2 6.1 12.6 5 14.6 5 18 5 19.6 8.4 18 11.7 15.5 16.4 12 21 12 21z" />
+            </svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 21s-7.5-4.6-10-9.3C.4 8.4 2 5 5.4 5c2 0 3.4 1.1 4.1 2.2.3.4.9.4 1.1 0C11.2 6.1 12.6 5 14.6 5 18 5 19.6 8.4 18 11.7 15.5 16.4 12 21 12 21z"
+                stroke="#262626"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+        <button onClick={onToggleComments} className="active:scale-90 transition-transform">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M21 11.5a8.5 8.5 0 01-12.4 7.55L3 21l1.95-5.6A8.5 8.5 0 1121 11.5z"
+              stroke="#262626"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button className="active:scale-90 transition-transform">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#262626" strokeWidth="1.6" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <div className="flex-1" />
+        <button className="active:scale-90 transition-transform">
+          <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+            <path d="M1 1h18v20l-9-5-9 5V1z" stroke="#262626" strokeWidth="1.6" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="px-3 pt-1.5">
+        <span className="text-[13px] font-semibold text-black">
+          Liked by {post.likedByUsername} and {post.likeCount.toLocaleString()} others
+        </span>
+      </div>
+
+      <div className="px-3 pt-0.5 text-[13px] text-black">
+        <span className="font-semibold">{post.username}</span> {post.caption}
+      </div>
+
+      <div className="px-3 pt-1 pb-0.5">
+        {!expanded && post.comments.length > 0 && (
+          <button onClick={onToggleComments} className="text-[13px] text-ios-gray">
+            View all {post.comments.length} comments
+          </button>
+        )}
+        {expanded && (
+          <div className="flex flex-col gap-1">
+            {post.comments.map((c, i) => (
+              <div key={i} className="text-[13px] text-black">
+                <span className="font-semibold">{c.username}</span> {c.text}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="px-3 pt-1 pb-3">
+        <span className="text-[10.5px] text-ios-gray tracking-wide uppercase">{post.timeAgo} ago</span>
+      </div>
+    </div>
+  );
 }
 
-function ConversationList({
-  threads,
-  messagesByThread,
-  onOpen,
+// ---- Bottom tab bar ---------------------------------------------------
+
+function BottomTabBar({ myAvatar }: { myAvatar: string }) {
+  return (
+    <div className="flex items-center justify-between px-6 py-2.5 border-t border-black/10 bg-white">
+      <button>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1V10.5z" stroke="#262626" strokeWidth="1.7" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <button>
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7.5" stroke="#262626" strokeWidth="1.7" />
+          <path d="M21 21l-4.5-4.5" stroke="#262626" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      </button>
+      <button>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="20" height="20" rx="5" stroke="#262626" strokeWidth="1.7" />
+          <path d="M12 7v10M7 12h10" stroke="#262626" strokeWidth="1.7" strokeLinecap="round" />
+        </svg>
+      </button>
+      <button>
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="2" width="20" height="20" rx="4" stroke="#262626" strokeWidth="1.7" />
+          <path d="M9 7l8 5-8 5V7z" fill="#262626" />
+        </svg>
+      </button>
+      <button className="w-6 h-6 rounded-full overflow-hidden border border-black/20">
+        <img src={myAvatar} alt="Profile" className="w-full h-full object-cover bg-ios-card2" />
+      </button>
+    </div>
+  );
+}
+
+// ---- Header ---------------------------------------------------
+
+function Header() {
+  return (
+    <div className="pt-14 pb-2 px-4 flex items-center justify-between bg-white">
+      <span className="font-serif italic font-semibold text-[27px] tracking-tight text-black">
+        Instagram
+      </span>
+      <div className="flex items-center gap-4">
+        <button>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 21s-7.5-4.6-10-9.3C.4 8.4 2 5 5.4 5c2 0 3.4 1.1 4.1 2.2.3.4.9.4 1.1 0C11.2 6.1 12.6 5 14.6 5 18 5 19.6 8.4 18 11.7 15.5 16.4 12 21 12 21z"
+              stroke="#262626"
+              strokeWidth="1.7"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M4 19l1.4-4.8A8 8 0 1110 20.6L4 19z"
+              stroke="#262626"
+              strokeWidth="1.7"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---- Feed screen ---------------------------------------------------
+
+function FeedScreen({
+  posts,
+  stories,
+  expandedComments,
+  onToggleComments,
+  onToggleLike,
+  onDoubleTapImage,
+  heartPulsePostId,
+  onOpenStory,
   onClose,
+  myAvatar,
 }: {
-  threads: Thread[];
-  messagesByThread: Record<string, ChatMessage[]>;
-  onOpen: (id: string) => void;
+  posts: Post[];
+  stories: StoryUser[];
+  expandedComments: Record<string, boolean>;
+  onToggleComments: (id: string) => void;
+  onToggleLike: (id: string) => void;
+  onDoubleTapImage: (id: string) => void;
+  heartPulsePostId: string | null;
+  onOpenStory: (index: number) => void;
   onClose: () => void;
+  myAvatar: string;
 }) {
   const handleDragEnd = (
     _: MouseEvent | TouchEvent | PointerEvent,
@@ -265,435 +431,93 @@ function ConversationList({
 
   return (
     <motion.div
-      key="list"
+      key="feed"
       drag="y"
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={0.12}
       onDragEnd={handleDragEnd}
       initial={{ x: 0 }}
       animate={{ x: 0 }}
-      exit={{ x: "-28%", opacity: 0.5, transition: { duration: 0.28 } }}
       className="absolute inset-0 z-10 bg-white flex flex-col"
     >
       <StatusBar dark />
-      <div className="pt-14 px-4 pb-2">
-        <div className="flex items-center justify-between mt-1">
-          <h1 className="text-[32px] font-bold tracking-tight text-black">Messages</h1>
-          <button className="text-ios-blue text-[16px] font-medium">Edit</button>
-        </div>
-
-        <div className="mt-2 mb-1 flex items-center gap-1.5 bg-[#e9e9eb] rounded-[10px] px-3 h-9">
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <circle cx="6.5" cy="6.5" r="5" stroke="#8e8e93" strokeWidth="1.6" />
-            <path d="M10.3 10.3L13 13" stroke="#8e8e93" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-          <span className="text-[15px] text-ios-gray">Search</span>
-        </div>
-      </div>
+      <Header />
 
       <div className="flex-1 overflow-y-auto">
-                {threads.map((t) => {
-                  const preview = getLastMessagePreview(messagesByThread[t.id] ?? []);
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => onOpen(t.id)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 active:bg-gray-100 text-left"
-                    >
-                      <div className="relative w-[52px] h-[52px] shrink-0">
-                        <img
-                          src={t.avatar}
-                          alt={t.name}
-                          className="w-full h-full rounded-full object-cover bg-ios-card2"
-                        />
-                        {t.online && (
-                          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-ios-green border-2 border-white" />
-                        )}
-                      </div>
+        <StoryTray stories={stories} onOpenStory={onOpenStory} />
 
-                      <div className="flex-1 min-w-0 border-b border-black/5 pb-2.5">
-                        <div className="flex items-baseline justify-between">
-                          <span className="text-[16px] font-semibold text-black truncate">
-                            {t.name}
-                          </span>
-                          <span className="text-[13px] text-ios-gray shrink-0 ml-2">
-                            {preview.time}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span className="text-[14px] text-ios-gray truncate pr-2">
-                            {preview.text}
-                          </span>
-                          {t.unread > 0 && (
-                            <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-ios-green text-white text-[12px] font-semibold flex items-center justify-center">
-                              {t.unread}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-      </div>
-    </motion.div>
-  );
-}
-
-// ---- Chat bubble ---------------------------------------------------------
-
-function Bubble({
-  msg,
-  avatar,
-  showAvatar = true,
-}: {
-  msg: ChatMessage;
-  avatar: string;
-  showAvatar?: boolean;
-}) {
-  const isMe = msg.from === "me";
-  const isSticker = msg.type === "sticker";
-
-  return (
-    <div className={cn("flex items-end gap-2", isMe ? "justify-end" : "justify-start")}>
-      {!isMe &&
-        (showAvatar ? (
-          <img
-            src={avatar}
-            alt=""
-            className="w-7 h-7 rounded-full object-cover shrink-0 mb-1 bg-ios-card2"
-          />
-        ) : (
-          <div className="w-7 shrink-0" />
-        ))}
-      <div
-        className={cn(
-          "flex items-end gap-1.5",
-          isMe && "flex-row-reverse",
-          isSticker ? "max-w-[150px]" : "max-w-[78%]"
-        )}
-      >
-        {isSticker ? (
-          <img
-            src={msg.stickerSrc}
-            alt="sticker"
-            className="w-[130px] h-[130px] object-contain drop-shadow-md select-none"
-          />
-        ) : (
-          <div
-            className={cn(
-              "px-3.5 py-2 text-[14.5px] leading-snug shadow-sm break-words",
-              isMe
-                ? "bg-[#2bd465] text-white rounded-2xl rounded-br-[4px]"
-                : "bg-white text-black rounded-2xl rounded-bl-[4px]"
-            )}
-          >
-            {msg.text}
-          </div>
-        )}
-        <span className="text-[10px] text-white/80 mb-0.5 shrink-0 whitespace-nowrap">
-          {isMe && msg.read ? "Read" : msg.time}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function TypingBubble({ avatar }: { avatar: string }) {
-  return (
-    <div className="flex items-end gap-2 justify-start">
-      <img
-        src={avatar}
-        alt=""
-        className="w-7 h-7 rounded-full object-cover shrink-0 mb-1 bg-ios-card2"
-      />
-      <div className="bg-white rounded-2xl rounded-bl-[4px] px-4 py-3 shadow-sm flex items-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="w-2 h-2 rounded-full bg-gray-400"
-            animate={{ y: [0, -4, 0] }}
-            transition={{
-              duration: 0.9,
-              repeat: Infinity,
-              delay: i * 0.15,
-              ease: "easeInOut",
-            }}
+        {posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            expanded={!!expandedComments[post.id]}
+            onToggleComments={() => onToggleComments(post.id)}
+            onToggleLike={() => onToggleLike(post.id)}
+            onDoubleTapImage={() => onDoubleTapImage(post.id)}
+            showHeartPulse={heartPulsePostId === post.id}
           />
         ))}
       </div>
-    </div>
-  );
-}
 
-function DateDivider({ label }: { label: string }) {
-  return (
-    <div className="flex justify-center my-3">
-      <span className="px-3 py-1 rounded-full bg-black/15 text-white text-[11px] font-medium tracking-wide">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-// ---- Chat detail screen ---------------------------------------------------
-
-function ChatDetail({
-  thread,
-  messages,
-  isTyping,
-  draft,
-  setDraft,
-  onSend,
-  onBack,
-  keyboardOpen,
-  setKeyboardOpen,
-}: {
-  thread: Thread;
-  messages: ChatMessage[];
-  isTyping: boolean;
-  draft: string;
-  setDraft: (v: string) => void;
-  onSend: () => void;
-  onBack: () => void;
-  keyboardOpen: boolean;
-  setKeyboardOpen: (v: boolean) => void;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const insertChar = (char: string) => setDraft(draft + char);
-  const backspace = () => setDraft(draft.slice(0, -1));
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, keyboardOpen, isTyping]);
-
-  return (
-    <motion.div
-      key="chat"
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.08}
-      onDragEnd={(_, info) => {
-        if (info.offset.x > 100 || info.velocity.x > 600) onBack();
-      }}
-      initial={{ x: "100%" }}
-      animate={{ x: 0, transition: { type: "spring", stiffness: 380, damping: 38 } }}
-      exit={{ x: "100%", transition: { duration: 0.26 } }}
-      className="absolute inset-0 z-20 bg-white flex flex-col"
-    >
-
-      <StatusBar dark />
-
-      <div className="relative pt-14 pb-2 px-3 flex items-center border-b border-black/10 bg-white">
-        <button
-          onClick={onBack}
-          className="relative z-10 flex items-center gap-0.5 text-ios-blue active:opacity-60"
-        >
-          <svg width="11" height="18" viewBox="0 0 12 20" fill="none">
-            <path d="M10 2L2 10l8 8" stroke="#0a84ff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="text-[17px] -ml-0.5">Messages</span>
-        </button>
-
-        <div className="absolute inset-0 pt-14 pb-2 flex flex-col items-center justify-center pointer-events-none">
-          <div className="relative w-9 h-9">
-            <img src={thread.avatar} alt={thread.name} className="w-full h-full rounded-full object-cover bg-ios-card2" />
-            {thread.online && (
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-ios-green border-2 border-white" />
-            )}
-          </div>
-          <span className="text-[13px] font-semibold text-black mt-0.5">{thread.name}</span>
-          <span className="text-[11px] text-ios-gray">
-            {isTyping ? "typing…" : thread.online ? "Online" : "Offline"}
-          </span>
-        </div>
-      </div>
-
-      <div
-        ref={scrollRef}
-        onClick={() => keyboardOpen && setKeyboardOpen(false)}
-        className="flex-1 min-h-0 overflow-y-auto px-3 py-3"
-        style={{ backgroundColor: "#849cc4" }}
-      >
-        {messages.map((m, i) => {
-          const prev = messages[i - 1];
-          const next = messages[i + 1];
-          const isGroupStart = !prev || prev.from !== m.from;
-          const isGroupEnd = !next || next.from !== m.from;
-          const showDivider = !prev || prev.day !== m.day;
-
-          return (
-            <div key={m.id}>
-              {showDivider && <DateDivider label={m.day} />}
-              <div
-                className={cn(
-                  showDivider || i === 0 ? "mt-0" : isGroupStart ? "mt-3" : "mt-1"
-                )}
-              >
-                <Bubble msg={m} avatar={thread.avatar} showAvatar={isGroupEnd} />
-              </div>
-            </div>
-          );
-        })}
-
-        {isTyping && (
-          <div className="mt-3">
-            <TypingBubble avatar={thread.avatar} />
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 px-3 py-2 bg-white border-t border-black/10">
-        <button className="w-8 h-8 rounded-full border-2 border-ios-gray flex items-center justify-center shrink-0">
-          <span className="text-ios-gray text-[20px] leading-none -mt-0.5">+</span>
-        </button>
-
-        <div className="flex-1 flex items-center bg-[#f0f0f0] rounded-full px-3.5 h-9">
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onFocus={() => setKeyboardOpen(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") onSend();
-            }}
-            placeholder="iMessage"
-            readOnly
-            className="flex-1 bg-transparent outline-none text-[15px] text-black placeholder:text-ios-gray"
-          />
-        </div>
-
-        {draft.trim().length > 0 ? (
-          <button
-            onClick={onSend}
-            className="w-8 h-8 rounded-full bg-ios-blue flex items-center justify-center shrink-0"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 7h9M7 3l4 4-4 4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        ) : (
-          <>
-            <button className="shrink-0">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="7" width="18" height="13" rx="2.5" stroke="#8e8e93" strokeWidth="1.6" />
-                <circle cx="12" cy="13.5" r="3.3" stroke="#8e8e93" strokeWidth="1.6" />
-              </svg>
-            </button>
-            <button className="shrink-0">
-              <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
-                <rect x="6" y="1" width="8" height="13" rx="4" stroke="#8e8e93" strokeWidth="1.6" />
-                <path d="M2 11a8 8 0 0016 0M10 19v2" stroke="#8e8e93" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            </button>
-          </>
-        )}
-      </div>
-
-      <AnimatePresence>
-        {keyboardOpen && (
-          <VirtualKeyboard onKey={insertChar} onBackspace={backspace} onSend={onSend} />
-        )}
-      </AnimatePresence>
+      <BottomTabBar myAvatar={myAvatar} />
     </motion.div>
   );
 }
 
 // ---- Root component --------------------------------------------------
 
-export default function IMessageApp() {
+export default function InstagramApp() {
   const closeApp = usePhoneStore((s) => s.closeApp);
 
-  const [view, setView] = useState<"list" | "chat">("list");
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [threads, setThreads] = useState<Thread[]>(INITIAL_THREADS);
-  const [messagesByThread, setMessagesByThread] =
-    useState<Record<string, ChatMessage[]>>(INITIAL_MESSAGES);
-  const [draft, setDraft] = useState("");
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [typingThreadId, setTypingThreadId] = useState<string | null>(null);
+  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+  const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
+  const [heartPulsePostId, setHeartPulsePostId] = useState<string | null>(null);
 
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  useEffect(() => {
-    return () => timers.current.forEach(clearTimeout);
-  }, []);
-
-  const activeThread = threads.find((t) => t.id === activeId) ?? null;
-
-  const openThread = (id: string) => {
-    setActiveId(id);
-    setView("chat");
-    setThreads((prev) => prev.map((t) => (t.id === id ? { ...t, unread: 0 } : t)));
+  const toggleLike = (postId: string) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, liked: !p.liked, likeCount: p.liked ? p.likeCount - 1 : p.likeCount + 1 }
+          : p
+      )
+    );
   };
 
-  const backToList = () => {
-    setView("list");
-    setKeyboardOpen(false);
+  const toggleComments = (postId: string) => {
+    setExpandedComments((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  const sendMessage = () => {
-    if (!draft.trim() || !activeId) return;
-    const threadId = activeId;
-
-    const newMsg: ChatMessage = {
-      id: `${threadId}-${Date.now()}`,
-      from: "me",
-      text: draft.trim(),
-      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-      day: "Today",
-      read: false,
-    };
-    setMessagesByThread((prev) => ({
-      ...prev,
-      [threadId]: [...(prev[threadId] ?? []), newMsg],
-    }));
-    setDraft("");
-
-    const t1 = setTimeout(() => setTypingThreadId(threadId), 700);
-    const t2 = setTimeout(() => {
-      setTypingThreadId(null);
-      setMessagesByThread((prev) => ({
-        ...prev,
-        [threadId]: [
-          ...(prev[threadId] ?? []),
-          {
-            id: `${threadId}-reply-${Date.now()}`,
-            from: "them",
-            text: AUTO_REPLY[threadId] ?? "...",
-            time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-            day: "Today",
-          },
-        ],
-      }));
-    }, 2300);
-    timers.current.push(t1, t2);
+  const handleDoubleTapImage = (postId: string) => {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId && !p.liked ? { ...p, liked: true, likeCount: p.likeCount + 1 } : p))
+    );
+    setHeartPulsePostId(postId);
+    setTimeout(() => setHeartPulsePostId(null), 650);
   };
 
   return (
     <div className="absolute inset-0 bg-white overflow-hidden">
-      <AnimatePresence initial={false}>
-         <ConversationList
-          key="list-screen"
-          threads={threads}
-          messagesByThread={messagesByThread}
-          onOpen={openThread}
-          onClose={closeApp}
-        />
-      </AnimatePresence>
+      <FeedScreen
+        posts={posts}
+        stories={STORIES}
+        expandedComments={expandedComments}
+        onToggleComments={toggleComments}
+        onToggleLike={toggleLike}
+        onDoubleTapImage={handleDoubleTapImage}
+        heartPulsePostId={heartPulsePostId}
+        onOpenStory={setActiveStoryIndex}
+        onClose={closeApp}
+        myAvatar={STORIES[0]?.avatar ?? "/avatars/agetta.jpeg"}
+      />
 
       <AnimatePresence>
-        {view === "chat" && activeThread && (
-          <ChatDetail
-            key="chat-screen"
-            thread={activeThread}
-            messages={messagesByThread[activeThread.id] ?? []}
-            isTyping={typingThreadId === activeThread.id}
-            draft={draft}
-            setDraft={setDraft}
-            onSend={sendMessage}
-            onBack={backToList}
-            keyboardOpen={keyboardOpen}
-            setKeyboardOpen={setKeyboardOpen}
+        {activeStoryIndex !== null && (
+          <StoryViewer
+            stories={STORIES}
+            index={activeStoryIndex}
+            onClose={() => setActiveStoryIndex(null)}
+            onChangeIndex={setActiveStoryIndex}
           />
         )}
       </AnimatePresence>
