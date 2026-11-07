@@ -27,11 +27,16 @@ interface PostData {
   timeAgo: string;
 }
 
+interface StorySlide {
+  imageUrl: string; // portrait image
+  timeAgo: string; // e.g. "4h"
+}
+
 interface StoryData {
   id: string;
   username: string;
   avatarUrl: string;
-  storyImageUrl: string;
+  slides: StorySlide[]; // one progress tick per slide
 }
 
 // ---- Mock data: swap these URLs and strings for your narrative content ----
@@ -40,6 +45,8 @@ const avatar = (id: string) =>
   `https://images.unsplash.com/${id}?w=160&h=160&fit=crop&crop=faces&auto=format&q=80`;
 const photo = (id: string, w = 900) =>
   `https://images.unsplash.com/${id}?w=${w}&auto=format&fit=crop&q=80`;
+const storyPhoto = (id: string) =>
+  `https://images.unsplash.com/${id}?w=900&h=1600&fit=crop&auto=format&q=80`;
 
 const POSTS_DATA: PostData[] = [
   {
@@ -87,36 +94,55 @@ const POSTS_DATA: PostData[] = [
   },
 ];
 
+// Each character has their own array of story slides. Reveal clues here:
+// add, remove or reorder slides freely, the progress ticks adapt.
 const STORIES_DATA: StoryData[] = [
   {
     id: "agetta",
     username: "agetta",
     avatarUrl: avatar("photo-1500648767791-00dcc994a43e"),
-    storyImageUrl: photo("photo-1469474968028-56623f02e42e", 1000),
+    slides: [
+      { imageUrl: storyPhoto("photo-1469474968028-56623f02e42e"), timeAgo: "4h" },
+      { imageUrl: storyPhoto("photo-1506744038136-46273834b3fb"), timeAgo: "3h" },
+      { imageUrl: storyPhoto("photo-1472214103451-9374bd1c798e"), timeAgo: "1h" },
+    ],
   },
   {
     id: "utami",
     username: "utami",
     avatarUrl: avatar("photo-1438761681033-6461ffad8d80"),
-    storyImageUrl: photo("photo-1518837695005-2083093ee35b", 1000),
+    slides: [
+      { imageUrl: storyPhoto("photo-1518837695005-2083093ee35b"), timeAgo: "6h" },
+      { imageUrl: storyPhoto("photo-1470071459604-3b5ec3a7fe05"), timeAgo: "5h" },
+    ],
   },
   {
     id: "nora",
     username: "nora.exe",
     avatarUrl: avatar("photo-1494790108377-be9c29b29330"),
-    storyImageUrl: photo("photo-1476514525535-07fb3b4ae5f1", 1000),
+    slides: [
+      { imageUrl: storyPhoto("photo-1476514525535-07fb3b4ae5f1"), timeAgo: "8h" },
+      { imageUrl: storyPhoto("photo-1475924156734-496f6cac6ec1"), timeAgo: "7h" },
+      { imageUrl: storyPhoto("photo-1465146344425-f00d5f5c8f07"), timeAgo: "7h" },
+    ],
   },
   {
     id: "crew",
     username: "the.crew",
     avatarUrl: avatar("photo-1507003211169-0a1dd7228f2d"),
-    storyImageUrl: photo("photo-1488646953014-85cb44e25828", 1000),
+    slides: [
+      { imageUrl: storyPhoto("photo-1488646953014-85cb44e25828"), timeAgo: "10h" },
+      { imageUrl: storyPhoto("photo-1441974231531-c6227db76b6e"), timeAgo: "9h" },
+    ],
   },
   {
     id: "mika",
     username: "mika",
     avatarUrl: avatar("photo-1517841905240-472988babdf9"),
-    storyImageUrl: photo("photo-1501785888041-af3ef285b470", 1000),
+    slides: [
+      { imageUrl: storyPhoto("photo-1501785888041-af3ef285b470"), timeAgo: "12h" },
+      { imageUrl: storyPhoto("photo-1500530855697-b586d89ba3ee"), timeAgo: "11h" },
+    ],
   },
 ];
 
@@ -281,30 +307,71 @@ function CloseIcon({ size = 22 }: { size?: number }) {
   );
 }
 
-// ---- Story viewer (auto-advances, tap zones, swipe down to close) --------
+// ---- Story viewer overlay -------------------------------------------------
+// Full-bleed portrait image, segmented progress bar, user bar with close
+// button, tap zones (left = back, right = forward) and a reply strip.
+// The slide auto-advances after STORY_DURATION_SECONDS, and the timer pauses
+// while the reply field is focused so it never moves on mid-sentence.
 
 const STORY_DURATION_SECONDS = 5;
+const PROGRESS_TICK_MS = 50;
 
 function StoryViewer({
-  stories,
-  index,
+  user,
+  slideIndex,
+  onSlideChange,
   onClose,
-  onChangeIndex,
 }: {
-  readonly stories: StoryData[];
-  readonly index: number;
+  readonly user: StoryData;
+  readonly slideIndex: number;
+  readonly onSlideChange: (index: number) => void;
   readonly onClose: () => void;
-  readonly onChangeIndex: (i: number) => void;
 }) {
-  const story = stories[index];
-  if (!story) return null;
+  const slide = user.slides[slideIndex];
+
+  const [progress, setProgress] = useState(0); // 0..1 for the current slide
+  const [paused, setPaused] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [storyLiked, setStoryLiked] = useState(false);
+  const replyRef = useRef<HTMLInputElement>(null);
+
+  const isLastSlide = slideIndex >= user.slides.length - 1;
 
   const goNext = () => {
-    if (index < stories.length - 1) onChangeIndex(index + 1);
-    else onClose();
+    if (isLastSlide) onClose();
+    else onSlideChange(slideIndex + 1);
   };
+
   const goPrev = () => {
-    if (index > 0) onChangeIndex(index - 1);
+    if (slideIndex > 0) onSlideChange(slideIndex - 1);
+    else setProgress(0); // already on the first slide: just restart it
+  };
+
+  // Reset per-slide state whenever the slide (or the user) changes
+  useEffect(() => {
+    setProgress(0);
+    setStoryLiked(false);
+  }, [user.id, slideIndex]);
+
+  // Drive the active progress tick
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => {
+      setProgress((p) => Math.min(1, p + PROGRESS_TICK_MS / (STORY_DURATION_SECONDS * 1000)));
+    }, PROGRESS_TICK_MS);
+    return () => clearInterval(id);
+  }, [paused, user.id, slideIndex]);
+
+  // Advance (or close, on the last slide) once the tick completes
+  useEffect(() => {
+    if (progress >= 1) goNext();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress]);
+
+  const sendReply = () => {
+    if (!replyText.trim()) return;
+    setReplyText("");
+    replyRef.current?.blur();
   };
 
   const handleDragEnd = (
@@ -314,9 +381,14 @@ function StoryViewer({
     if (info.offset.y > 100 || info.velocity.y > 600) onClose();
   };
 
+  if (!slide) return null;
+
+  const stripButton =
+    "text-white active:scale-95 transition-all duration-100 cursor-pointer";
+
   return (
     <motion.div
-      key="story-viewer"
+      key={`story-${user.id}`}
       initial={{ opacity: 0, scale: 0.94 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.94 }}
@@ -325,56 +397,100 @@ function StoryViewer({
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={0.15}
       onDragEnd={handleDragEnd}
-      className="absolute inset-0 z-40 bg-black flex flex-col"
+      className="absolute inset-0 z-40 bg-black overflow-hidden"
     >
-      <div className="pt-12 px-2 flex gap-1">
-        {stories.map((s, i) => (
-          <div key={s.id} className="flex-1 h-[2.5px] rounded-full bg-white/30 overflow-hidden">
-            {i < index && <div className="h-full w-full bg-white" />}
-            {i === index && (
-              <motion.div
-                key={`progress-${index}`}
-                className="h-full bg-white"
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                transition={{ duration: STORY_DURATION_SECONDS, ease: "linear" }}
-                onAnimationComplete={goNext}
-              />
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Full-bleed portrait image */}
+      <img
+        key={slide.imageUrl}
+        src={slide.imageUrl}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 w-full h-full object-cover select-none"
+      />
 
-      <div className="flex items-center gap-2.5 px-3 pt-3 pb-2">
-        <img
-          src={story.avatarUrl}
-          alt={story.username}
-          className="w-8 h-8 rounded-full object-cover bg-neutral-800"
-        />
-        <span className="text-white text-[14px] font-semibold">{story.username}</span>
-        <span className="text-white/60 text-[13px]">2h</span>
-        <div className="flex-1" />
-        <button
-          onClick={onClose}
-          aria-label="Close story"
-          className="text-white p-1 active:scale-95 transition-all duration-100 cursor-pointer"
-        >
-          <CloseIcon />
-        </button>
-      </div>
+      {/* Legibility gradients behind the top bar and the reply strip */}
+      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
-      <div className="relative flex-1 bg-neutral-900">
-        <img src={story.storyImageUrl} alt="" className="w-full h-full object-cover" />
+      <StatusBar />
+
+      {/* Tap zones sit between the top bar and the reply strip so they never
+          cover the close button or the input */}
+      <div className="absolute inset-x-0 top-[120px] bottom-[96px] z-10 flex">
         <button
           onClick={goPrev}
-          className="absolute inset-y-0 left-0 w-1/3"
-          aria-label="Previous story"
+          aria-label="Previous slide"
+          className="w-1/3 h-full cursor-pointer"
         />
         <button
           onClick={goNext}
-          className="absolute inset-y-0 right-0 w-2/3"
-          aria-label="Next story"
+          aria-label={isLastSlide ? "Close story" : "Next slide"}
+          className="flex-1 h-full cursor-pointer"
         />
+      </div>
+
+      {/* Top: segmented progress bar + user bar */}
+      <div className="absolute inset-x-0 top-0 z-20 pt-12">
+        <div className="px-2 flex gap-1">
+          {user.slides.map((s, i) => {
+            let fill = 0;
+            if (i < slideIndex) fill = 1;
+            else if (i === slideIndex) fill = progress;
+            return (
+              <div
+                key={s.imageUrl}
+                className="flex-1 h-[2.5px] rounded-full bg-white/35 overflow-hidden"
+              >
+                <div className="h-full bg-white" style={{ width: `${fill * 100}%` }} />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2.5 px-3 pt-3">
+          <img
+            src={user.avatarUrl}
+            alt={user.username}
+            className="w-8 h-8 rounded-full object-cover bg-neutral-800"
+          />
+          <span className="text-white text-[14px] font-semibold">{user.username}</span>
+          <span className="text-white/70 text-[13px]">{slide.timeAgo}</span>
+          <div className="flex-1" />
+          <button
+            onClick={onClose}
+            aria-label="Close story"
+            className={cn(stripButton, "p-1")}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom: "Send message" reply strip */}
+      <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-7 pt-3 flex items-center gap-3">
+        <input
+          ref={replyRef}
+          value={replyText}
+          onChange={(e) => setReplyText(e.target.value)}
+          onFocus={() => setPaused(true)}
+          onBlur={() => setPaused(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") sendReply();
+          }}
+          placeholder="Send message"
+          aria-label="Send message"
+          className="flex-1 h-11 rounded-full border border-white/60 bg-transparent px-4 text-[14px] text-white placeholder:text-white/80 outline-none focus:border-white transition-colors"
+        />
+        <button
+          onClick={() => setStoryLiked((v) => !v)}
+          aria-label={storyLiked ? "Unlike story" : "Like story"}
+          className={stripButton}
+        >
+          <HeartIcon filled={storyLiked} size={26} />
+        </button>
+        <button onClick={sendReply} aria-label="Send" className={stripButton}>
+          <ShareIcon size={26} />
+        </button>
       </div>
     </motion.div>
   );
@@ -389,7 +505,7 @@ function StoryTray({
 }: {
   readonly stories: StoryData[];
   readonly viewed: Record<string, boolean>;
-  readonly onOpenStory: (index: number) => void;
+  readonly onOpenStory: (user: StoryData) => void;
 }) {
   return (
     <div
@@ -399,10 +515,10 @@ function StoryTray({
       )}
       style={NO_SCROLLBAR_STYLE}
     >
-      {stories.map((s, i) => (
+      {stories.map((s) => (
         <button
           key={s.id}
-          onClick={() => onOpenStory(i)}
+          onClick={() => onOpenStory(s)}
           className="flex flex-col items-center gap-1 shrink-0 active:scale-95 transition-all duration-100 cursor-pointer"
         >
           <div
@@ -657,9 +773,13 @@ export default function InstagramApp() {
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [viewedStories, setViewedStories] = useState<Record<string, boolean>>({});
-  const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
   const [heartPulsePostId, setHeartPulsePostId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("home");
+
+  // Which character's story is open (null = overlay closed), and which of
+  // their slides is showing
+  const [activeStoryUser, setActiveStoryUser] = useState<StoryData | null>(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
   const feedRef = useRef<HTMLDivElement>(null);
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -688,15 +808,13 @@ export default function InstagramApp() {
     pulseTimer.current = setTimeout(() => setHeartPulsePostId(null), 650);
   };
 
-  const openStory = (index: number) => {
-    setActiveStoryIndex(index);
-    setViewedStories((prev) => ({ ...prev, [STORIES_DATA[index].id]: true }));
+  const openStory = (user: StoryData) => {
+    setActiveSlideIndex(0);
+    setActiveStoryUser(user);
+    setViewedStories((prev) => ({ ...prev, [user.id]: true }));
   };
 
-  const changeStory = (index: number) => {
-    setActiveStoryIndex(index);
-    setViewedStories((prev) => ({ ...prev, [STORIES_DATA[index].id]: true }));
-  };
+  const closeStory = () => setActiveStoryUser(null);
 
   const selectTab = (tab: TabId) => {
     setActiveTab(tab);
@@ -753,12 +871,13 @@ export default function InstagramApp() {
       </motion.div>
 
       <AnimatePresence>
-        {activeStoryIndex !== null && (
+        {activeStoryUser && (
           <StoryViewer
-            stories={STORIES_DATA}
-            index={activeStoryIndex}
-            onClose={() => setActiveStoryIndex(null)}
-            onChangeIndex={changeStory}
+            key={activeStoryUser.id}
+            user={activeStoryUser}
+            slideIndex={activeSlideIndex}
+            onSlideChange={setActiveSlideIndex}
+            onClose={closeStory}
           />
         )}
       </AnimatePresence>
